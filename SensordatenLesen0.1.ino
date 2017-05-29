@@ -2,6 +2,7 @@
 #include <Wire.h>
 
 I2CSoilMoistureSensor sensor;
+const int pwm_a = 3, dir_a = 12, brake_a = 9, sns_a = A0;
 int delaytime = 100;//time between two measurements in ms
 int measurecount = 1;//how many measure are taken for the average
 int dry; //used to toggle on the pump
@@ -16,6 +17,11 @@ void setup() {
   delay(1000); // boot up
   Serial.println("\nstartup");
 
+  pinMode(brake_a, OUTPUT);
+  pinMode(dir_a, OUTPUT);
+  digitalWrite(brake_a, LOW);
+  digitalWrite(dir_a, HIGH);
+  
   pump = false;
 }
 
@@ -83,6 +89,11 @@ boolean toowet(int dly, int mc){
 }
 
 void refreshpump(){
-
+  if(pump){
+    analogWrite(pwm_a, 255);
+  }
+  else{
+    analogWrite(pwm_a, 0);
+  }
 }
 
