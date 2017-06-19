@@ -34,7 +34,6 @@ void loop() {
   capacitance = getCapacitance(delaytime,measurecount);
   temperature = getTemperature(delaytime,measurecount);
   Serial.print("Feuchtigkeit: ");
-  Serial.print(dry);
   Serial.print(capacitance); //read capacitance register
   Serial.print(", Temperatur: ");
   Serial.println(temperature); //temperature register
@@ -96,7 +95,7 @@ void refreshpump(){
   if(toowet()){
     pump = false;
   }
-  Serial.print(pump);
+  
   if(pump){
     analogWrite(pwm_a, 255);
     Serial.println("Pumpe sollte laufen");
