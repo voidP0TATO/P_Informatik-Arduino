@@ -4,18 +4,22 @@
 I2CSoilMoistureSensor sensor;
 const int pwm_a = 3, dir_a = 12, brake_a = 9, sns_a = 0;
 const int pwm_b = 11,dir_b = 13, brake_b = 8,sns_b = 1;
+const int cdwateringmax = 20, cdwaitingmax = 1200;//maximum cooldown times in 50ms
 int delaytime = 100;//time between two measurements in ms
 int measurecount = 1;//how many measure are taken for the average
 int dry; //used to toggle on the pump
-int wet; //used to toggle off the pump
+int flooded; //used to toggle off the pump
+int cdwatering, cdwaiting; //actual cooldown times in 50ms
 boolean pump;//determens wether the pump should be on or off
 int capacitance, temperature; 
 
 void setup() {
   Wire.begin();
   Serial.begin(9600);
-  dry = 350;
-  wet = 500;
+  dry = 362;
+  flooded = 520;
+  cdwaiting = 200;
+  cdwatering = 0;
 
   sensor.begin(); // reset sensor
   delay(1000); // boot up
@@ -46,6 +50,18 @@ void loop() {
   //Serial.println(sensor.getLight(true)); //request light measurement, wait and read light register
   sensor.sleep();
 
+  if(cdwaiting > 0){
+    cdwaiting = cdwaiting - 1;
+  }
+  Serial.print("Cooldown Waiting: ");
+  Serial.print(cdwaiting);
+  
+  if(cdwatering > 0){
+    cdwatering = cdwatering - 1;
+  }
+  Serial.print("; Cooldown Watering: ");
+  Serial.println(cdwatering);
+  
   //logic:
   refreshpump();
   delay(50);
@@ -86,19 +102,26 @@ boolean toodry(){
   return false;
 }
 
-boolean toowet(){
-  if(capacitance > wet){
+boolean isflooded(){
+  if(capacitance > flooded){
       return true;
   }
   return false;
 }
 
 void refreshpump(){
-  if(toodry()){
+  if(cdwatering == 0 && pump){
+     pump = false;
+     cdwaiting = cdwaitingmax;
+  }
+  if(toodry() && cdwaiting == 0 && !pump){
+    cdwatering = cdwateringmax;
     pump = true;
   }
-  if(toowet()){
+  if(isflooded()){
     pump = false;
+    cdwatering = 0;
+    cdwaiting = cdwaitingmax;
   }
   
   if(pump){
